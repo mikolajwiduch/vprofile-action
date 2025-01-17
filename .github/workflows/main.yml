@@ -102,7 +102,7 @@ jobs:
       
       # ECR Login & Deploy Helm
       - name: Login to ECR
-        run: kubectl create secret docker-registry regcred --docker-server=${{ secrets.REGISTRY }} --docker-username=AWS    --docker-password=$(aws ecr get-login-password) 
+        run: kubectl create secret docker-registry regcred --docker-server=${{ secrets.REGISTRY }} --docker-username=AWS --docker-password=$(aws ecr get-login-password) 
 
 
       - name: Deploy Helm
