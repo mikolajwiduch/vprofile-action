@@ -126,3 +126,51 @@ jobs:
           namespace: default
           values: appimage=${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }},apptag=${{ github.run_number }}
           name: vprofile-stack
+
+    # Debugging Steps
+      - name: Check Pods
+        run: kubectl get pods -n default
+
+      - name: Check Services
+        run: kubectl get svc -n default
+
+      - name: Check Ingress
+        run: kubectl get ingress -n default
+
+      - name: Describe Pods
+        run: |
+          for pod in $(kubectl get pods -n default -o name); do
+            echo "Describing $pod"
+            kubectl describe $pod -n default
+          done
+
+      - name: Check Pod Logs
+        run: |
+          for pod in $(kubectl get pods -n default -o name); do
+            echo "Logs for $pod"
+            kubectl logs $pod -n default
+          done
+
+      - name: Describe Services
+        run: |
+          for svc in $(kubectl get svc -n default -o name); do
+            echo "Describing $svc"
+            kubectl describe $svc -n default
+          done
+
+      - name: Describe Ingress
+        run: |
+          for ingress in $(kubectl get ingress -n default -o name); do
+            echo "Describing $ingress"
+            kubectl describe $ingress -n default
+          done
+
+      - name: Check Ingress Controller Logs
+        run: |
+          nginx_pod=$(kubectl get pods -n ingress-nginx -l app.kubernetes.io/component=controller -o name | head -n 1)
+          if [ -n "$nginx_pod" ]; then
+            echo "Ingress Controller Logs for $nginx_pod"
+            kubectl logs $nginx_pod -n ingress-nginx
+          else
+            echo "No ingress controller pod found in the ingress-nginx namespace."
+          fi
