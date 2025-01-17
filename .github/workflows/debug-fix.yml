@@ -1,10 +1,5 @@
 name: EKS Deployment Debug and Fix
-
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
   debug-deployment:
