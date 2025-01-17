@@ -100,8 +100,8 @@ jobs:
       
       - name: Verify Pod Connectivity
         run: |
-          kubectl exec -it <pod-name> -- curl http://vprodb:3306
-          kubectl exec -it <pod-name> -- curl http://vprocache01:11211
+          kubectl exec -it vprodb-69b467cd94-6gsgj -- curl http://vprodb:3306
+          kubectl exec -it vpromc-58999459d8-xcdnl -- curl http://vprocache01:11211
         
       - name: Expose Application Service
         run: |
