@@ -93,3 +93,30 @@ jobs:
           else
             echo "No ingress controller pod found in the ingress-nginx namespace."
           fi
+      - name: Check Services and Endpoints
+        run: |
+          kubectl describe svc vprodb
+          kubectl describe svc vprocache01
+      
+      - name: Verify Pod Connectivity
+        run: |
+          kubectl exec -it <pod-name> -- curl http://vprodb:3306
+          kubectl exec -it <pod-name> -- curl http://vprocache01:11211
+        
+      - name: Expose Application Service
+        run: |
+          kubectl patch svc my-app -p '{"spec": {"type": "LoadBalancer"}}'
+        
+      - name: Check Application Logs
+        run: |
+          kubectl logs vproapp-855546b95d-f9vkl
+        
+      - name: Validate Ingress Rules
+        run: |
+          kubectl describe ingress vpro-ingress
+
+
+      
+        
+
+        
