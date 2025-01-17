@@ -1,0 +1,64 @@
+name: Debug EKS and ECR
+on: workflow_dispatch
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: vprofileapp
+  EKS_CLUSTER: vprofile-eks
+
+jobs:
+  Debug:
+    runs-on: ubuntu-latest
+    steps:
+      # AWS Credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Verify AWS CLI Installation
+      - name: Verify AWS CLI Installation
+        run: aws --version
+
+      # Test EKS Cluster Access
+      - name: Configure kubectl for EKS
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER }}
+          kubectl cluster-info
+          kubectl get nodes
+
+      # Verify ECR Login
+      - name: Test ECR Login
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.REGISTRY }}
+
+      # Create Kubernetes Secret for ECR
+      - name: Create Kubernetes Secret
+        run: |
+          kubectl create secret docker-registry regcred \
+            --docker-server=${{ secrets.REGISTRY }} \
+            --docker-username=AWS \
+            --docker-password=$(aws ecr get-login-password --region ${{ env.AWS_REGION }}) \
+          || echo "Secret creation failed or already exists"
+
+      # Verify Kubernetes Secrets
+      - name: List Kubernetes Secrets
+        run: kubectl get secrets -n default
+
+      # Dry-run Helm Deployment
+      - name: Helm Dry Run
+        run: |
+          helm upgrade --install vprofile-stack helm/vprofilecharts \
+            --namespace default \
+            --set appimage=${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }} \
+            --set apptag=latest \
+            --dry-run
+
+      # Check Kubernetes Pods
+      - name: List Pods
+        run: kubectl get pods -n default
+
+      # Check Kubernetes Services
+      - name: List Services
+        run: kubectl get svc -n default
